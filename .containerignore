@@ -1,0 +1,5 @@
+*
+!Containerfile
+!nginx.conf
+!site/
+!site/**
