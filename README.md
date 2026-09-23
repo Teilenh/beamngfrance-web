@@ -1,6 +1,8 @@
 # BeamNG France
 
-Site communautaire en **HTML, CSS et JavaScript vanilla**, sans framework, dépendance npm ni compilation. Le conteneur Nginx sert les fichiers et relaie les données publiques BeamMP et Discord.
+Site communautaire en **HTML, CSS et JavaScript vanilla**, sans framework, dépendance npm ni compilation. Nginx sert les fichiers statiques et relaie les données publiques BeamMP et Discord nécessaires à la page.
+
+Le projet utilise directement l’image officielle `nginxinc/nginx-unprivileged`. Les sources et la configuration Nginx sont montées en lecture seule dans le conteneur : aucune image locale ni étape de build n’est nécessaire.
 
 ## Lancer le site
 
@@ -24,15 +26,15 @@ Le conteneur est rootless, sans privilèges supplémentaires, avec un système d
 
 ```text
 site/
-  index.html                     Accueil et liens Discord
-  informations-legales/index.html Informations accessibles depuis le footer
-  styles.css                     Apparence, responsive et thèmes
-  app.js                         Thème et actualisation des statistiques
-  beammp.js                      Filtrage et présentation des serveurs
-  assets/logo.png                Logo affiché en rond
-nginx.conf                       Serveur statique et relais BeamMP
-start.sh                         Démarrage et arrêt avec Podman
-tests/beammp.test.mjs             Tests du filtrage (Node facultatif)
+  index.html                        Accueil et liens Discord
+  informations-legales/index.html  Informations accessibles depuis le footer
+  styles.css                        Apparence, responsive et thèmes
+  app.js                            Thème et actualisation des statistiques
+  beammp.js                         Filtrage et présentation des serveurs
+  assets/logo.png                   Logo affiché en rond
+nginx.conf                          Serveur statique et relais BeamMP/Discord
+start.sh                            Démarrage et arrêt avec Podman
+tests/beammp.test.mjs               Tests du filtrage BeamMP
 ```
 
 Les modifications dans `site/` sont visibles au prochain chargement de page. Après une modification de `nginx.conf`, lancer `./start.sh --restart`. Le choix clair/sombre reste en mémoire dans la page, sans cookie ni stockage local.
@@ -49,14 +51,18 @@ La liste est mise en cache pendant 60 secondes côté Nginx et consultée chaque
 
 Pour un hébergement public, placer le service derrière ton reverse proxy HTTPS. Si tu utilises un autre serveur web, servir `site/` à la racine et conserver les trois relais de même origine définis dans `nginx.conf` ; ouvrir simplement le fichier HTML ne suffit pas pour les statistiques.
 
-## Tests facultatifs
+## Vérifications
 
 Avec une version récente de Node.js (v24 utilisée pour la vérification), sans installer de paquet :
 
 ```sh
+node --check site/app.js
+node --check site/beammp.js
 node --test tests/beammp.test.mjs
+bash -n start.sh
+podman exec beamng-france-static nginx -t
 ```
 
 ## Publication du code
 
-Le dépôt contient les sources à la racine (`site/`, `nginx.conf`, `start.sh`, `tests/` et ce README). Aucun fichier généré ni secret n’est nécessaire. `.gitignore` exclut les fichiers `.env` et les journaux locaux.
+Le code source est publié sur [GitHub](https://github.com/Teilenh/beamngfrance-web), branche `main`. Le dépôt contient les sources à la racine (`site/`, `nginx.conf`, `start.sh`, `tests/` et ce README). Aucun fichier généré ni secret n’est nécessaire. `.gitignore` exclut les fichiers `.env` et les journaux locaux.
