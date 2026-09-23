@@ -2,25 +2,17 @@
 
 Site communautaire en **HTML, CSS et JavaScript vanilla**, sans framework, dépendance npm ni compilation. Nginx sert les fichiers statiques et relaie les données publiques BeamMP et Discord nécessaires à la page.
 
-Le projet utilise directement l’image officielle `nginxinc/nginx-unprivileged`. Les sources et la configuration Nginx sont montées en lecture seule dans le conteneur : aucune image locale ni étape de build n’est nécessaire.
+Le site ne demande aucun runtime applicatif ni étape de build.
 
-## Lancer le site
+## Déploiement
 
-Prérequis sous Linux : Bash, Podman configuré en mode rootless et curl. Une connexion Internet est nécessaire au premier lancement pour télécharger l’image Nginx, puis pour consulter BeamMP et Discord. Aucune installation automatique sur l’hôte.
+Servir le contenu de `site/` à la racine du domaine et reprendre les trois relais de même origine définis dans `nginx.conf` :
 
-```sh
-./start.sh
-```
+- `/api/beammp` pour la liste publique des serveurs ;
+- `/api/discord-widget` pour l’activité du Discord ;
+- `/api/discord-invite/…` pour le nombre approximatif de membres.
 
-Ouvrir <http://localhost:3000>. Le script vérifie les prérequis, crée le conteneur s’il manque ou démarre celui qui existe. Il attend une réponse HTTP avant d’annoncer le site disponible.
-
-```sh
-./start.sh --stop       # arrêter le site
-./start.sh --restart    # recharger la configuration Nginx
-podman logs beamng-france-static
-```
-
-Le conteneur est rootless, sans privilèges supplémentaires, avec un système de fichiers en lecture seule et un espace temporaire en mémoire. Les dossiers `site/` et `nginx.conf` y sont montés en lecture seule. Le port est exposé uniquement sur `127.0.0.1`. Les cgroups sont désactivés pour fonctionner aussi sans session systemd utilisateur.
+Le service public doit être placé derrière HTTPS. Ouvrir directement `index.html` ne permet pas de charger les statistiques, car ces relais doivent rester sur la même origine que la page.
 
 ## Modifier le site
 
@@ -33,11 +25,11 @@ site/
   beammp.js                         Filtrage et présentation des serveurs
   assets/logo.png                   Logo affiché en rond
 nginx.conf                          Serveur statique et relais BeamMP/Discord
-start.sh                            Démarrage et arrêt avec Podman
+start.sh                            Aide facultative pour une prévisualisation locale
 tests/beammp.test.mjs               Tests du filtrage BeamMP
 ```
 
-Les modifications dans `site/` sont visibles au prochain chargement de page. Après une modification de `nginx.conf`, lancer `./start.sh --restart`. Le choix clair/sombre reste en mémoire dans la page, sans cookie ni stockage local.
+Les modifications dans `site/` sont visibles au prochain chargement de page. Une modification de `nginx.conf` nécessite un rechargement du serveur web. Le choix clair/sombre reste en mémoire dans la page, sans cookie ni stockage local.
 
 ## Statistiques BeamMP
 
@@ -48,20 +40,6 @@ Le panneau Discord utilise de la même façon `/api/discord-widget`, qui relaie 
 Le JavaScript retient les serveurs **BeamNG France** hébergés par Slapush ainsi que les serveurs **Slapush'Server** du partenaire. Il affiche le total de joueurs connectés et les cartes distinctes. Aucun maximum de joueurs ni détail sur les mods n’est affiché.
 
 La liste est mise en cache pendant 60 secondes côté Nginx et consultée chaque minute lorsque la page est visible. BeamMP peut également mettre ses données en cache : il ne s’agit pas d’un suivi instantané. Si l’API échoue, la page indique que les statistiques sont indisponibles et conserve les dernières valeurs reçues, sans déclarer les serveurs hors ligne.
-
-Pour un hébergement public, placer le service derrière ton reverse proxy HTTPS. Si tu utilises un autre serveur web, servir `site/` à la racine et conserver les trois relais de même origine définis dans `nginx.conf` ; ouvrir simplement le fichier HTML ne suffit pas pour les statistiques.
-
-## Vérifications
-
-Avec une version récente de Node.js (v24 utilisée pour la vérification), sans installer de paquet :
-
-```sh
-node --check site/app.js
-node --check site/beammp.js
-node --test tests/beammp.test.mjs
-bash -n start.sh
-podman exec beamng-france-static nginx -t
-```
 
 ## Publication du code
 
