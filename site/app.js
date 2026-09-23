@@ -67,6 +67,7 @@ if (discordWidget) {
   const count = document.querySelector("#discord-online-count");
   const members = document.querySelector("#discord-widget-members");
   const message = document.querySelector("#discord-widget-message");
+  const memberRange = document.querySelector("#discord-member-range");
   let pending = false;
   let lastUpdate = "";
 
@@ -85,6 +86,16 @@ if (discordWidget) {
         throw new Error("Invalid Discord widget response");
       }
 
+      const invite = new URL(data.instant_invite);
+      const inviteCode = invite.pathname.split("/").filter(Boolean).at(-1);
+      if (!["discord.com", "discord.gg"].includes(invite.hostname)
+          || !/^[A-Za-z0-9_-]{2,32}$/.test(inviteCode)) {
+        throw new Error("Invalid Discord invite");
+      }
+      document.querySelectorAll("[data-discord-invite]").forEach((link) => {
+        link.href = data.instant_invite;
+      });
+
       const onlineMembers = data.members.filter((member) => member?.status === "online"
         && typeof member.username === "string" && member.username.trim()).slice(0, 4);
       members.replaceChildren(...onlineMembers.map((member) => {
@@ -102,6 +113,28 @@ if (discordWidget) {
         item.textContent = "Aucun pseudo disponible pour le moment.";
         item.className = "discord-widget-empty";
         members.append(item);
+      }
+
+      try {
+        // The widget has the current invitation; its public API has the approximate total.
+        const inviteResponse = await fetch("/api/discord-invite/" + encodeURIComponent(inviteCode), {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (!inviteResponse.ok) throw new Error("Discord invite: " + inviteResponse.status);
+        const inviteData = await inviteResponse.json();
+        const memberCount = inviteData.approximate_member_count;
+        if (inviteData.guild?.id !== "828656939365957742"
+            || !Number.isSafeInteger(memberCount) || memberCount < 0) {
+          throw new Error("Invalid Discord invite response");
+        }
+        const threshold = Math.floor(memberCount / 500) * 500;
+        const formatted = new Intl.NumberFormat("fr-FR").format(threshold);
+        memberRange.textContent = threshold > 0 && memberCount > threshold
+          ? "Plus de " + formatted + " membres"
+          : new Intl.NumberFormat("fr-FR").format(memberCount) + " membres";
+      } catch {
+        // Keep the last confirmed threshold, or the neutral label on first load.
       }
     } catch {
       discordWidget.classList.add("is-unavailable");
@@ -124,40 +157,4 @@ if (discordWidget) {
   refreshDiscord();
   setInterval(refreshDiscord, 300000);
   document.addEventListener("visibilitychange", refreshDiscord);
-}
-
-const memberRange = document.querySelector("#discord-member-range");
-if (memberRange) {
-  let pending = false;
-
-  async function refreshMemberRange() {
-    if (pending || document.hidden) return;
-    pending = true;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-    try {
-      // The widget has an online count only; the public invite has the approximate total.
-      const response = await fetch("/api/discord-invite", { signal: controller.signal, cache: "no-store" });
-      if (!response.ok) throw new Error("Discord invite: " + response.status);
-      const data = await response.json();
-      const count = data.approximate_member_count;
-      if (data.guild?.id !== "828656939365957742" || !Number.isSafeInteger(count) || count < 0) {
-        throw new Error("Invalid Discord invite response");
-      }
-      const threshold = Math.floor(count / 500) * 500;
-      const formatted = new Intl.NumberFormat("fr-FR").format(threshold);
-      memberRange.textContent = threshold > 0 && count > threshold
-        ? "Plus de " + formatted + " membres"
-        : new Intl.NumberFormat("fr-FR").format(count) + " membres";
-    } catch {
-      // Keep the last confirmed threshold, or the neutral label on first load.
-    } finally {
-      clearTimeout(timeout);
-      pending = false;
-    }
-  }
-
-  refreshMemberRange();
-  setInterval(refreshMemberRange, 300000);
-  document.addEventListener("visibilitychange", refreshMemberRange);
 }
