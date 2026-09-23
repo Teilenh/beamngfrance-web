@@ -1,6 +1,6 @@
 # BeamNG France
 
-Site vitrine de la communauté BeamNG France. La page est écrite en HTML, CSS et JavaScript, sans compilation.
+Site vitrine de la communauté BeamNG France. La page est écrite en HTML, CSS et JavaScript.
 
 Elle présente le Discord, les serveurs BeamMP actifs et quelques informations sur la communauté. Les données publiques de Discord et BeamMP passent par Nginx pour rester accessibles depuis la même origine que le site.
 
