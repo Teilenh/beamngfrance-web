@@ -12,10 +12,10 @@ Elle survend le Discord, les serveurs BeamMP actifs et quelques informations sur
 
 Ouvrir directement `site/index.html` permet de voir la mise en page, mais pas de charger les statistiques.
 
-Guides :
+Docs :
 
-- [Comprendre et adapter la configuration Nginx](docs/nginx.md)
-- [Adapter le widget Discord](docs/widget-discord.md)
+- [Comprendre la configuration Nginx](docs/nginx.md)
+- [le widget Discord](docs/widget-discord.md)
 
 ## Où modifier quoi
 
