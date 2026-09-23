@@ -38,4 +38,3 @@ Les statistiques sont rafraîchies toutes les minutes pour BeamMP et toutes les 
 - confirmer que les serveurs attendus apparaissent et qu’aucune erreur ne remonte dans la console ;
 - recharger Nginx après toute modification de `nginx.conf`.
 
-Code source : [github.com/Teilenh/beamngfrance-web](https://github.com/Teilenh/beamngfrance-web)
