@@ -577,6 +577,25 @@ button {
   margin-left: 8px;
 }
 
+.footer-disclaimer {
+  flex-basis: 100%;
+  margin-top: -14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.footer-disclaimer a {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.footer-disclaimer a:hover {
+  color: var(--ink);
+}
+
 @media (max-width: 800px) {
   .topbar, .hero, .community-section, .beammp-section, .footer {
   width: min(100% - 36px, 620px);
