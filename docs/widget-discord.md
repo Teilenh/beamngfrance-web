@@ -25,21 +25,20 @@ Dans `site/app.js`, rechercher l’identifiant actuel `828656939365957742` et re
 
 ### 3. Modifier l’invitation de secours
 
-Rechercher `https://discord.com/invite/M6kGEqmj` dans :
+Rechercher `https://discord.gg/DRcuhcj2JW` dans :
 
 - `site/index.html` ;
 - `site/informations-legales/index.html`.
 
-Remplacer chaque occurrence par l’invitation permanente du nouveau serveur. Sur l’accueil, le JavaScript remplace ensuite ces liens par l’invitation fournie par le widget dès qu’elle est disponible.
+Remplacer chaque occurrence par l’invitation permanente du nouveau serveur. Remplacer également la valeur de `inviteCode` dans `site/app.js`, utilisée pour obtenir le nombre approximatif de membres.
 
 ## Comment les données circulent
 
 1. La page appelle `/api/discord-widget`.
 2. Nginx demande le widget public à Discord et garde la réponse en cache cinq minutes.
 3. `site/app.js` vérifie l’identifiant du serveur et affiche le nombre de personnes en ligne.
-4. Le code extrait l’invitation fournie par le widget et met à jour les liens marqués `data-discord-invite`.
-5. La page appelle `/api/discord-invite/CODE` pour obtenir le nombre approximatif de membres.
-6. Nginx relaie cet appel vers l’API Discord et le résultat alimente la carte « Plus de … membres ».
+4. La page appelle `/api/discord-invite/CODE` avec l’invitation configurée pour obtenir le nombre approximatif de membres.
+5. Nginx relaie cet appel vers l’API Discord et le résultat alimente la carte « Plus de … membres ».
 
 En cas d’échec, la page garde la dernière valeur valide et affiche un message d’indisponibilité.
 
@@ -47,7 +46,6 @@ En cas d’échec, la page garde la dernière valeur valide et affiche un messag
 
 | Élément | Utilité |
 | --- | --- |
-| `[data-discord-invite]` | Liens dont l’adresse est mise à jour avec l’invitation du widget. |
 | `#discord-online-count` | Nombre de personnes actuellement en ligne. |
 | `#discord-widget-message` | État du chargement ou message d’erreur. |
 | `#discord-member-range` | Estimation arrondie du nombre total de membres. |
@@ -68,7 +66,7 @@ Les couleurs, espacements et règles responsive du panneau se trouvent dans `sit
 
 ## Vérifier l’adaptation
 
-1. Ouvrir `/api/discord-widget` et confirmer que le JSON contient le bon identifiant, `presence_count` et `instant_invite`.
+1. Ouvrir `/api/discord-widget` et confirmer que le JSON contient le bon identifiant et `presence_count`.
 2. Ouvrir `/api/discord-invite/CODE` avec le code de l’invitation et confirmer la présence de `approximate_member_count`.
 3. Recharger l’accueil et vérifier le compteur ainsi que le message de mise à jour.
 4. Contrôler les liens Discord du header, du bouton principal et du footer.

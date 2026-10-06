@@ -64,6 +64,7 @@ if (card) {
 
 const discordWidget = document.querySelector("#discord-widget");
 if (discordWidget) {
+  const inviteCode = "DRcuhcj2JW";
   const count = document.querySelector("#discord-online-count");
   const message = document.querySelector("#discord-widget-message");
   const memberRange = document.querySelector("#discord-member-range");
@@ -85,22 +86,12 @@ if (discordWidget) {
         throw new Error("Invalid Discord widget response");
       }
 
-      const invite = new URL(data.instant_invite);
-      const inviteCode = invite.pathname.split("/").filter(Boolean).at(-1);
-      if (!["discord.com", "discord.gg"].includes(invite.hostname)
-          || !/^[A-Za-z0-9_-]{2,32}$/.test(inviteCode)) {
-        throw new Error("Invalid Discord invite");
-      }
-      document.querySelectorAll("[data-discord-invite]").forEach((link) => {
-        link.href = data.instant_invite;
-      });
-
       count.textContent = new Intl.NumberFormat("fr-FR").format(data.presence_count);
       discordWidget.classList.remove("is-unavailable");
       lastUpdate = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
       message.textContent = "Aperçu du Discord · mis à jour à " + lastUpdate;
       try {
-        // The widget has the current invitation; its public API has the approximate total.
+        // The invitation API provides the approximate total for the configured server.
         const inviteResponse = await fetch("/api/discord-invite/" + encodeURIComponent(inviteCode), {
           signal: controller.signal,
           cache: "no-store",
