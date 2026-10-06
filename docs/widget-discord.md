@@ -1,6 +1,6 @@
 # Adapter le widget Discord
 
-Le panneau Discord de l’accueil utilise le widget public du serveur. Il affiche le nombre de personnes en ligne, jusqu’à quatre pseudos et une estimation du nombre total de membres.
+Le panneau Discord de l’accueil utilise le widget public du serveur. Il affiche le nombre de personnes en ligne et une estimation du nombre total de membres.
 
 ## Ce qu’il faut préparer
 
@@ -41,7 +41,7 @@ Remplacer chaque occurrence par l’invitation permanente du nouveau serveur. Su
 5. La page appelle `/api/discord-invite/CODE` pour obtenir le nombre approximatif de membres.
 6. Nginx relaie cet appel vers l’API Discord et le résultat alimente la carte « Plus de … membres ».
 
-Aucun avatar Discord n’est chargé dans le navigateur. En cas d’échec, la page garde la dernière valeur valide et affiche un message d’indisponibilité.
+En cas d’échec, la page garde la dernière valeur valide et affiche un message d’indisponibilité.
 
 ## Repères dans le HTML
 
@@ -49,7 +49,6 @@ Aucun avatar Discord n’est chargé dans le navigateur. En cas d’échec, la p
 | --- | --- |
 | `[data-discord-invite]` | Liens dont l’adresse est mise à jour avec l’invitation du widget. |
 | `#discord-online-count` | Nombre de personnes actuellement en ligne. |
-| `#discord-widget-members` | Liste de quatre pseudos au maximum. |
 | `#discord-widget-message` | État du chargement ou message d’erreur. |
 | `#discord-member-range` | Estimation arrondie du nombre total de membres. |
 
@@ -63,17 +62,16 @@ Les valeurs suivantes se trouvent dans `site/app.js` :
 | --- | --- | --- |
 | Fréquence Discord | `300000` ms | Actualisation toutes les cinq minutes. |
 | Délai maximal | `12000` ms | Abandon d’un appel après douze secondes. |
-| Pseudos visibles | `.slice(0, 4)` | Limite la liste à quatre personnes. |
 | Palier des membres | `500` | Arrondit l’estimation au palier inférieur de 500. |
 
-Les couleurs, espacements et règles responsive du panneau se trouvent dans `site/styles.css` autour des sélecteurs `.discord-widget`, `.discord-stat` et `.discord-members`.
+Les couleurs, espacements et règles responsive du panneau se trouvent dans `site/styles.css` autour des sélecteurs `.discord-widget` et `.discord-widget-count`.
 
 ## Vérifier l’adaptation
 
-1. Ouvrir `/api/discord-widget` et confirmer que le JSON contient le bon identifiant, `presence_count`, `members` et `instant_invite`.
+1. Ouvrir `/api/discord-widget` et confirmer que le JSON contient le bon identifiant, `presence_count` et `instant_invite`.
 2. Ouvrir `/api/discord-invite/CODE` avec le code de l’invitation et confirmer la présence de `approximate_member_count`.
-3. Recharger l’accueil et vérifier le compteur, les pseudos et le lien « Passer dire bonjour ».
+3. Recharger l’accueil et vérifier le compteur ainsi que le message de mise à jour.
 4. Contrôler les liens Discord du header, du bouton principal et du footer.
 5. Vérifier la console du navigateur et l’affichage sur mobile.
 
-Le widget Discord ne renvoie que les membres visibles comme connectés. Son compteur peut donc différer du nombre de membres du serveur.
+Le compteur des personnes en ligne peut différer du nombre total de membres du serveur.

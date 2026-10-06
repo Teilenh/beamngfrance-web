@@ -65,7 +65,6 @@ if (card) {
 const discordWidget = document.querySelector("#discord-widget");
 if (discordWidget) {
   const count = document.querySelector("#discord-online-count");
-  const members = document.querySelector("#discord-widget-members");
   const message = document.querySelector("#discord-widget-message");
   const memberRange = document.querySelector("#discord-member-range");
   let pending = false;
@@ -82,7 +81,7 @@ if (discordWidget) {
       if (!response.ok) throw new Error("Discord: " + response.status);
       const data = await response.json();
       if (data.id !== "828656939365957742" || !Number.isSafeInteger(data.presence_count)
-          || data.presence_count < 0 || !Array.isArray(data.members)) {
+          || data.presence_count < 0) {
         throw new Error("Invalid Discord widget response");
       }
 
@@ -96,25 +95,10 @@ if (discordWidget) {
         link.href = data.instant_invite;
       });
 
-      const onlineMembers = data.members.filter((member) => member?.status === "online"
-        && typeof member.username === "string" && member.username.trim()).slice(0, 4);
-      members.replaceChildren(...onlineMembers.map((member) => {
-        const item = document.createElement("li");
-        item.textContent = member.username;
-        item.title = member.username;
-        return item;
-      }));
       count.textContent = new Intl.NumberFormat("fr-FR").format(data.presence_count);
       discordWidget.classList.remove("is-unavailable");
       lastUpdate = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
       message.textContent = "Aperçu du Discord · mis à jour à " + lastUpdate;
-      if (!onlineMembers.length) {
-        const item = document.createElement("li");
-        item.textContent = "Aucun pseudo disponible pour le moment.";
-        item.className = "discord-widget-empty";
-        members.append(item);
-      }
-
       try {
         // The widget has the current invitation; its public API has the approximate total.
         const inviteResponse = await fetch("/api/discord-invite/" + encodeURIComponent(inviteCode), {
@@ -138,12 +122,6 @@ if (discordWidget) {
       }
     } catch {
       discordWidget.classList.add("is-unavailable");
-      if (!lastUpdate) {
-        const item = document.createElement("li");
-        item.textContent = "Aucun aperçu disponible pour le moment.";
-        item.className = "discord-widget-empty";
-        members.replaceChildren(item);
-      }
       message.textContent = lastUpdate
         ? "Dernières données reçues à " + lastUpdate + " · nouvel essai dans cinq minutes."
         : "Le widget Discord ne répond pas pour le moment.";
