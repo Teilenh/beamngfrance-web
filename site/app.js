@@ -1,4 +1,4 @@
-import { summarizeServers } from "./beammp.js";
+import { summarizeServers } from "./beammp.js?v=20261006-2";
 
 const themeButton = document.querySelector(".theme-toggle");
 if (themeButton) {
