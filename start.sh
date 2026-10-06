@@ -2,13 +2,12 @@
 set -Eeuo pipefail
 
 PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-CONTAINER="beamng-france-static"
-IMAGE="docker.io/nginxinc/nginx-unprivileged:stable-alpine"
-LABEL="io.beamng-france.project"
-ACTION="${1:-start}"
+SITE_SOURCE="$PROJECT_DIR/site"
+SITE_TARGET="/var/www/beamng-france"
+ACTION="${1:-install}"
 
 case "$ACTION" in
-  start|--restart|--stop) ;;
+  install|--restart|--stop) ;;
   -h|--help)
     printf 'Usage: ./start.sh [--restart|--stop]\n'
     exit 0 ;;
@@ -16,57 +15,89 @@ case "$ACTION" in
 esac
 (( $# <= 1 )) || { printf 'Trop d’arguments.\n' >&2; exit 2; }
 
-command -v podman >/dev/null || { printf 'Podman est requis.\n' >&2; exit 1; }
-command -v curl >/dev/null || { printf 'curl est requis.\n' >&2; exit 1; }
-[[ "$(podman info --format '{{.Host.Security.Rootless}}')" == true ]] || {
-  printf 'Podman doit fonctionner en mode rootless, sans sudo.\n' >&2
+[[ $EUID -eq 0 ]] || {
+  printf 'Ce script doit être lancé en root, directement ou avec sudo.\n' >&2
   exit 1
 }
-[[ -f "$PROJECT_DIR/nginx.conf" && -f "$PROJECT_DIR/site/index.html" ]] || {
+[[ -f "$PROJECT_DIR/nginx.conf" && -f "$SITE_SOURCE/index.html" ]] || {
   printf 'nginx.conf ou site/index.html est manquant.\n' >&2
   exit 1
 }
 
-if [[ "$ACTION" == --stop ]]; then
-  if podman container exists "$CONTAINER"; then
-    podman stop "$CONTAINER" >/dev/null
+service_action() {
+  local command="$1"
+
+  if command -v systemctl >/dev/null 2>&1 && [[ -d /run/systemd/system ]]; then
+    if [[ "$command" == enable ]]; then
+      systemctl enable nginx
+      systemctl restart nginx
+    else
+      systemctl "$command" nginx
+    fi
+  elif command -v rc-service >/dev/null 2>&1; then
+    if [[ "$command" == enable ]]; then
+      rc-update add nginx default >/dev/null
+      rc-service nginx restart || rc-service nginx start
+    else
+      rc-service nginx "$command"
+    fi
+  else
+    case "$command" in
+      enable|restart) nginx -s reload 2>/dev/null || nginx ;;
+      stop) nginx -s stop ;;
+    esac
   fi
+}
+
+if [[ "$ACTION" == --stop ]]; then
+  command -v nginx >/dev/null 2>&1 || { printf 'Nginx n’est pas installé.\n'; exit 0; }
+  service_action stop
   printf 'Site arrêté.\n'
   exit 0
 fi
 
-if podman container exists "$CONTAINER"; then
-  owner="$(podman inspect --format "{{ index .Config.Labels \"$LABEL\" }}" "$CONTAINER")"
-  site_mount="$(podman inspect --format '{{ range .Mounts }}{{ if eq .Destination "/usr/share/nginx/html" }}{{ .Source }}{{ end }}{{ end }}' "$CONTAINER")"
-  config_mount="$(podman inspect --format '{{ range .Mounts }}{{ if eq .Destination "/etc/nginx/conf.d/default.conf" }}{{ .Source }}{{ end }}{{ end }}' "$CONTAINER")"
-  [[ "$owner" == "$PROJECT_DIR" || ( -z "$owner" && "$site_mount" == "$PROJECT_DIR/site" && "$config_mount" == "$PROJECT_DIR/nginx.conf" ) ]] || {
-    printf 'Le conteneur %s ne provient pas de ce projet. Arrêt sans modification.\n' "$CONTAINER" >&2
-    exit 1
-  }
-  if [[ "$ACTION" == --restart ]]; then
-    podman restart "$CONTAINER" >/dev/null
+if ! command -v nginx >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1 \
+  || [[ ! -f /etc/ssl/certs/ca-certificates.crt ]]; then
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get update
+    env DEBIAN_FRONTEND=noninteractive apt-get install -y nginx ca-certificates curl
+  elif command -v apk >/dev/null 2>&1; then
+    apk add --no-cache nginx ca-certificates curl
   else
-    podman start "$CONTAINER" >/dev/null
+    printf 'Système non pris en charge. Installe nginx, ca-certificates et curl manuellement.\n' >&2
+    exit 1
   fi
+fi
+
+if [[ -d /etc/nginx/http.d ]]; then
+  NGINX_TARGET="/etc/nginx/http.d/beamng-france.conf"
+  [[ ! -f /etc/nginx/http.d/default.conf ]] \
+    || mv /etc/nginx/http.d/default.conf /etc/nginx/http.d/default.conf.disabled
 else
-  podman run --detach --name "$CONTAINER" --pull=missing \
-    --label "$LABEL=$PROJECT_DIR" \
-    --publish "127.0.0.1:3000:8080" \
-    --volume "$PROJECT_DIR/site:/usr/share/nginx/html:ro,Z" \
-    --volume "$PROJECT_DIR/nginx.conf:/etc/nginx/conf.d/default.conf:ro,Z" \
-    --cgroups=disabled --read-only --tmpfs /tmp:rw,nosuid,nodev,size=64m \
-    --cap-drop all --security-opt no-new-privileges \
-    "$IMAGE" >/dev/null
+  NGINX_TARGET="/etc/nginx/conf.d/beamng-france.conf"
+  if [[ -L /etc/nginx/sites-enabled/default ]]; then
+    unlink /etc/nginx/sites-enabled/default
+  fi
+fi
+
+install -d -m 0755 "$SITE_TARGET"
+cp -a "$SITE_SOURCE/." "$SITE_TARGET/"
+install -m 0644 "$PROJECT_DIR/nginx.conf" "$NGINX_TARGET"
+
+nginx -t
+if [[ "$ACTION" == --restart ]]; then
+  service_action restart
+else
+  service_action enable
 fi
 
 for _ in {1..15}; do
-  if curl --noproxy '*' --fail --silent --max-time 2 "http://127.0.0.1:3000/" >/dev/null; then
-    printf 'BeamNG France : http://localhost:3000/\nArrêter : ./start.sh --stop\n'
+  if curl --noproxy '*' --fail --silent --max-time 2 "http://127.0.0.1/" >/dev/null; then
+    printf 'BeamNG France est disponible sur http://%s/\n' "$(hostname -I 2>/dev/null | awk '{print $1}')"
     exit 0
   fi
   sleep 1
 done
 
-printf 'Le site ne répond pas. Derniers logs :\n' >&2
-podman logs --tail 20 "$CONTAINER" >&2
+printf 'Nginx fonctionne, mais le site ne répond pas sur le port 80.\n' >&2
 exit 1

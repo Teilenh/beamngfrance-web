@@ -6,9 +6,22 @@ Elle survend le Discord, les serveurs BeamMP actifs et quelques informations sur
 
 ## Mettre le site en ligne
 
-1. Servir le dossier `site/` à la racine du domaine.
-2. Reprendre les relais `/api/beammp`, `/api/discord-widget` et `/api/discord-invite/…` de `nginx.conf`.
-3. Placer le domaine derrière HTTPS.
+Dans un LXC Debian, Ubuntu ou Alpine, depuis un shell root :
+
+```sh
+./start.sh
+```
+
+Le script installe Nginx, les certificats racine et `curl` s’ils manquent, copie le site dans `/var/www/beamng-france`, installe `nginx.conf`, puis démarre le service sur le port 80.
+
+Pour appliquer une nouvelle version ou arrêter le site :
+
+```sh
+./start.sh --restart
+./start.sh --stop
+```
+
+Placer ensuite le domaine derrière HTTPS.
 
 Ouvrir directement `site/index.html` permet de voir la mise en page, mais pas de charger les statistiques.
 
@@ -37,4 +50,3 @@ Les statistiques sont rafraîchies toutes les minutes pour BeamMP et toutes les 
 - vérifier que `/api/beammp` et `/api/discord-widget` renvoient du JSON ;
 - confirmer que les serveurs attendus apparaissent et qu’aucune erreur ne remonte dans la console ;
 - recharger Nginx après toute modification de `nginx.conf`.
-

@@ -6,9 +6,9 @@ Le fichier `nginx.conf` sert le dossier `site/` et relaie trois API publiques. C
 
 | Option | Rôle | Quand la modifier |
 | --- | --- | --- |
-| `listen 8080` | Port écouté par Nginx. | Si l’hébergeur attend un autre port. |
+| `listen 80` | Port HTTP écouté par Nginx. | Si l’hébergeur ou le reverse proxy attend un autre port. |
 | `server_name _` | Accepte tous les noms d’hôte. | Remplacer `_` par le domaine si Nginx reçoit directement le trafic public. |
-| `root /usr/share/nginx/html` | Dossier contenant `index.html`. | Si les fichiers du site sont installés ailleurs. |
+| `root /var/www/beamng-france` | Dossier où `start.sh` copie les fichiers du site. | Si les fichiers du site sont installés ailleurs. |
 | `index index.html` | Fichier servi pour un dossier. | À conserver avec la structure actuelle. |
 | `charset utf-8` | Envoie le bon encodage pour les textes français. | À conserver. |
 | `server_tokens off` | Masque la version de Nginx dans les réponses. | À conserver. |
@@ -76,6 +76,14 @@ La procédure complète pour changer de serveur se trouve dans [Adapter le widge
 
 ## Adapter la configuration à un hébergeur
 
+Sur un LXC Debian, Ubuntu ou Alpine, le déploiement standard se fait depuis la racine du dépôt avec les droits root :
+
+```sh
+./start.sh
+```
+
+Le script installe les paquets nécessaires, désactive la page Nginx fournie par défaut, copie `site/` dans `/var/www/beamng-france`, place cette configuration dans le dossier chargé par Nginx et active le service au démarrage du LXC.
+
 Vérifier ces points :
 
 1. le chemin de `root` correspond au dossier publié ;
@@ -95,8 +103,6 @@ nginx -s reload
 Puis vérifier les deux sources principales :
 
 ```sh
-curl http://localhost:8080/api/beammp
-curl http://localhost:8080/api/discord-widget
+curl http://localhost/api/beammp
+curl http://localhost/api/discord-widget
 ```
-
-Adapter le port des commandes à l’installation locale.
