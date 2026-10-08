@@ -350,6 +350,17 @@ button {
   background: #1e3d8f;
 }
 
+.benefit-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .benefit-card h3 {
   font-size: 13px;
   margin: 0 0 8px;
