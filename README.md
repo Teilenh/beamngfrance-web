@@ -1,5 +1,4 @@
 # BeamNG France
-https://beamngfrance.com
 Site vitrine de la communauté BeamNG France. La page est écrite en HTML, CSS et JavaScript.
 
 Site public : [beamngfrance.com](https://beamngfrance.com/)
