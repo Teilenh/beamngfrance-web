@@ -47,6 +47,18 @@ button {
   color: inherit;
 }
 
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
 .site-shell {
   background: radial-gradient(circle at 88% 5%, rgba(255,91,34,.1), transparent 25rem), var(--bg);
 }
@@ -129,8 +141,8 @@ button {
 
 .theme-icon {
   color: var(--orange-soft);
-  font-size: 17px;
-  line-height: 1;
+  width: 17px;
+  height: 17px;
 }
 
 .button {
@@ -160,8 +172,9 @@ button {
   display: none;
 }
 
-.button > span:last-child, .footer-discord span {
-  font-size: 16px;
+.button .icon-external, .footer-discord .icon-external {
+  width: 15px;
+  height: 15px;
 }
 
 .hero {
@@ -246,15 +259,18 @@ button {
 }
 
 .text-link {
+  display: inline-flex;
+  align-items: center;
   font-size: 11px;
   font-weight: 700;
   color: var(--muted);
 }
 
-.text-link span {
+.text-link .icon {
   color: var(--orange-soft);
-  padding-left: 5px;
-  font-size: 16px;
+  width: 15px;
+  height: 15px;
+  margin-left: 5px;
 }
 
 .hero-note {
@@ -350,7 +366,7 @@ button {
   background: #1e3d8f;
 }
 
-.benefit-icon svg {
+.benefit-icon .icon {
   display: block;
   width: 16px;
   height: 16px;
@@ -582,10 +598,9 @@ button {
 .footer-discord {
   color: var(--orange-soft);
   font-weight: 700;
-}
-
-.footer-discord span {
-  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .footer-disclaimer {
@@ -853,6 +868,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   font-size: 11px;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .legal-back:hover {
@@ -940,6 +958,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .legal-page-footer a:hover {
   color: var(--orange-soft);
+}
+
+.legal-page-footer a:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
 @media (max-width: 800px) {

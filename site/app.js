@@ -8,7 +8,9 @@ if (themeButton) {
     document.documentElement.dataset.theme = light ? "light" : "dark";
     themeButton.setAttribute("aria-pressed", String(light));
     themeButton.setAttribute("aria-label", light ? "Activer le mode sombre" : "Activer le mode clair");
-    themeButton.querySelector(".theme-icon").textContent = light ? "◐" : "☼";
+    themeButton.querySelector(".theme-icon use").setAttribute("href", light
+      ? "/assets/lucide.svg#moon"
+      : "/assets/lucide.svg#sun");
     themeButton.querySelector(".theme-label").textContent = light ? "Sombre" : "Clair";
   });
 }
